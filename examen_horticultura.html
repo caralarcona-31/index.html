@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Examen Virtual – Horticultura & Fisiología Vegetal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* HEADER */
+    .header-band { background: #1a2e1a; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    .logo-leaf { width: 36px; height: 36px; background: #4CAF50; border-radius: 50% 0 50% 0; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .header-band h1 { font-family: 'Playfair Display', serif; color: #e8f5e9; font-size: 20px; font-weight: 600; }
+    .header-band .subtitle { font-size: 12px; color: #a5d6a7; margin-top: 2px; }
+
+    /* CONTENT */
+    .content-area { padding: 2rem; max-width: 700px; margin: 0 auto; }
+
+    /* CARDS */
+    .card { background: #fff; border: 1px solid #e0e0d8; border-radius: 14px; padding: 1.75rem; margin-bottom: 1.25rem; }
+    .card h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; margin-bottom: 0.4rem; }
+    .card p { font-size: 13px; color: #555; line-height: 1.7; margin-bottom: 0.75rem; }
+
+    /* INFO GRID */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 1.25rem 0; }
+    .info-pill { background: #f5f5f0; border-radius: 10px; padding: 0.7rem 1rem; text-align: center; }
+    .info-pill .val { font-size: 20px; font-weight: 500; color: #2e7d32; }
+    .info-pill .lbl { font-size: 11px; color: #777; margin-top: 2px; }
+
+    /* BADGES */
+    .section-badges { display: flex; gap: 8px; flex-wrap: wrap; margin: 0.65rem 0; }
+    .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    .badge-green { background: #e8f5e9; color: #2e7d32; }
+    .badge-blue  { background: #e3f2fd; color: #1565c0; }
+    .badge-amber { background: #fff8e1; color: #e65100; }
+
+    /* INPUT */
+    .input-group { margin: 1.25rem 0 0; }
+    .input-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; color: #555; }
+    .input-group input { width: 100%; padding: 11px 14px; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; background: #fff; color: #1a1a1a; outline: none; }
+    .input-group input:focus { border-color: #4CAF50; box-shadow: 0 0 0 3px rgba(76,175,80,0.12); }
+
+    /* BUTTONS */
+    .btn-primary { width: 100%; padding: 13px; background: #2e7d32; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 1rem; transition: background 0.2s; }
+    .btn-primary:hover { background: #1b5e20; }
+
+    /* TOPBAR EXAMEN */
+    .exam-topbar { display: flex; align-items: center; gap: 12px; padding: 0.9rem 2rem; background: #f0f0ea; border-bottom: 1px solid #e0e0d8; flex-wrap: wrap; }
+    .progress-wrap { flex: 1; min-width: 120px; }
+    .progress-label { font-size: 12px; color: #777; margin-bottom: 4px; }
+    .progress-bar-bg { height: 6px; background: #ddd; border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: #4CAF50; border-radius: 3px; transition: width 0.4s ease; }
+    .timer-box { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 5px 12px; min-width: 80px; }
+    .timer-box .ti { font-size: 15px; color: #4CAF50; }
+    .timer-box.urgent .ti { color: #c62828; }
+    .timer-num { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .timer-box.urgent .timer-num { color: #c62828; }
+    .section-tag { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+
+    /* PREGUNTA */
+    .question-card { background: #fff; border: 1px solid #e0e0d8; border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; animation: fadeSlide 0.3s ease; }
+    @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .question-num { font-size: 12px; color: #888; margin-bottom: 0.4rem; }
+    .question-text { font-size: 15px; line-height: 1.65; font-weight: 500; margin-bottom: 1.25rem; }
+    .options-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .option-btn { width: 100%; text-align: left; padding: 11px 15px; border: 1px solid #ccc; border-radius: 10px; background: #fff; color: #1a1a1a; font-size: 13px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: border-color 0.15s, background 0.15s; line-height: 1.5; }
+    .option-btn:hover:not(:disabled) { border-color: #4CAF50; background: #f1f8e9; }
+    .option-btn.selected { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; font-weight: 500; }
+    .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+    .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tf-btn { padding: 16px; border: 1px solid #ccc; border-radius: 10px; background: #fff; color: #1a1a1a; font-size: 16px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .tf-btn:hover:not(:disabled) { border-color: #4CAF50; background: #f1f8e9; }
+    .tf-btn.selected-v { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; }
+    .tf-btn.selected-f { border-color: #c62828; background: #ffebee; color: #b71c1c; }
+    .tf-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+    .time-expired-note { font-size: 12px; color: #c62828; background: #ffebee; border: 1px solid #ef9a9a; border-radius: 10px; padding: 8px 14px; margin-top: 0.75rem; display: none; }
+    .next-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; color: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
+    .next-btn:hover { background: #f5f5f0; }
+    .next-btn.finish-btn { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+    .next-btn.finish-btn:hover { background: #1b5e20; }
+
+    /* RESULTADO */
+    .result-header { text-align: center; padding: 1.5rem 2rem 0.75rem; }
+    .result-icon { font-size: 48px; margin-bottom: 0.4rem; }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-bottom: 0.25rem; }
+    .result-sub { font-size: 13px; color: #666; }
+    .score-ring-wrap { display: flex; justify-content: center; margin: 1.25rem 0; }
+    .score-ring { position: relative; width: 130px; height: 130px; }
+    .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .score-ring .ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+    .score-ring .ring-pct { font-size: 26px; font-weight: 500; line-height: 1; }
+    .score-ring .ring-lbl { font-size: 10px; color: #888; margin-top: 2px; }
+    .result-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 9px; margin-bottom: 1.25rem; }
+    .rstat { background: #f5f5f0; border-radius: 10px; padding: 0.75rem 1rem; text-align: center; }
+    .rstat .rv { font-size: 19px; font-weight: 500; }
+    .rstat .rl { font-size: 11px; color: #888; margin-top: 2px; }
+    .section-breakdown { background: #fff; border: 1px solid #e0e0d8; border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem; }
+    .sbreak-header { padding: 0.85rem 1.25rem; background: #f5f5f0; border-bottom: 1px solid #e0e0d8; font-size: 12px; font-weight: 500; color: #777; }
+    .sbreak-row { display: flex; align-items: center; gap: 12px; padding: 0.9rem 1.25rem; border-bottom: 1px solid #e0e0d8; }
+    .sbreak-row:last-child { border-bottom: none; }
+    .sbreak-icon { font-size: 19px; color: #4CAF50; }
+    .sbreak-info { flex: 1; }
+    .sbreak-name { font-size: 13px; font-weight: 500; }
+    .sbreak-detail { font-size: 11px; color: #888; margin-top: 2px; }
+    .sbreak-score { font-size: 15px; font-weight: 500; }
+    .review-section { margin-bottom: 1.25rem; }
+    .review-title { font-size: 13px; font-weight: 500; color: #777; margin-bottom: 0.65rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e0e0d8; }
+    .review-item { background: #fff; border: 1px solid #e0e0d8; border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 7px; font-size: 12px; line-height: 1.6; }
+    .review-item .rq { font-weight: 500; margin-bottom: 5px; }
+    .review-item .ra-row { display: flex; gap: 7px; margin-top: 4px; flex-wrap: wrap; }
+    .ans-chip { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+    .ans-correct { background: #e8f5e9; color: #2e7d32; }
+    .ans-wrong   { background: #ffebee; color: #c62828; }
+    .ans-skipped { background: #fff8e1; color: #e65100; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.75rem; }
+    .btn-export { padding: 13px; background: #1565c0; color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.2s; }
+    .btn-export:hover { background: #0d47a1; }
+    .btn-export.csv { background: #00695c; }
+    .btn-export.csv:hover { background: #004d40; }
+    .export-note { font-size: 11px; color: #888; text-align: center; margin-top: 0.5rem; margin-bottom: 1rem; }
+    .retry-btn { width: 100%; padding: 12px; background: #1a2e1a; color: #e8f5e9; border: none; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .retry-btn:hover { background: #0d1f0d; }
+
+    @media (max-width: 500px) {
+      .content-area { padding: 1.25rem; }
+      .exam-topbar { padding: 0.75rem 1.25rem; }
+      .header-band { padding: 1rem 1.25rem; }
+      .action-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- INICIO -->
+<div id="screen-start" class="screen active">
+  <div class="header-band">
+    <div class="logo-leaf">🌿</div>
+    <div><h1>Examen Virtual</h1><div class="subtitle">Horticultura & Fisiología Vegetal</div></div>
+  </div>
+  <div class="content-area">
+    <div class="card">
+      <h2>Instrucciones del examen</h2>
+      <p>Lee cada pregunta con atención y selecciona la respuesta correcta. Al finalizar podrás descargar tus resultados en Excel o CSV.</p>
+      <div class="info-grid">
+        <div class="info-pill"><div class="val">15</div><div class="lbl">Preguntas</div></div>
+        <div class="info-pill"><div class="val">15</div><div class="lbl">Puntos posibles</div></div>
+        <div class="info-pill"><div class="val">80%</div><div class="lbl">Para aprobar</div></div>
+        <div class="info-pill"><div class="val">1 min</div><div class="lbl">Por pregunta</div></div>
+      </div>
+      <div class="section-badges">
+        <span class="badge badge-green">Sección 1: Opción múltiple</span>
+        <span class="badge badge-blue">8 preguntas · 70%</span>
+      </div>
+      <div class="section-badges">
+        <span class="badge badge-amber">Sección 2: Verdadero / Falso</span>
+        <span class="badge badge-blue">7 preguntas · 30%</span>
+      </div>
+      <p style="background:#f5f5f0;padding:9px 13px;border-radius:10px;margin-top:1rem;">
+        <i class="ti ti-clock" style="font-size:13px;vertical-align:-1px;margin-right:4px;"></i>
+        Tienes <strong>60 segundos</strong> por pregunta. Si el tiempo se acaba, la pregunta se omite y se avanza automáticamente.
+      </p>
+      <div class="input-group">
+        <label for="student-name">Nombre completo</label>
+        <input type="text" id="student-name" placeholder="Ingresa tu nombre..." autocomplete="off" />
+      </div>
+      <button class="btn-primary" onclick="startExam()">
+        <i class="ti ti-player-play"></i> Comenzar examen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EXAMEN -->
+<div id="screen-exam" class="screen">
+  <div class="header-band" style="padding:1rem 2rem;">
+    <div class="logo-leaf" style="width:28px;height:28px;font-size:14px;">🌿</div>
+    <div style="flex:1;">
+      <div style="font-family:'Playfair Display',serif;color:#e8f5e9;font-size:15px;font-weight:600;">Examen en curso</div>
+      <div id="student-display" style="font-size:11px;color:#a5d6a7;"></div>
+    </div>
+  </div>
+  <div class="exam-topbar">
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-label">Pregunta 1 de 15</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:6.67%"></div></div>
+    </div>
+    <span class="section-tag badge badge-green" id="section-tag">Sección 1</span>
+    <div class="timer-box" id="timer-box">
+      <i class="ti ti-clock"></i>
+      <span class="timer-num" id="timer-num">60</span>
+    </div>
+  </div>
+  <div class="content-area">
+    <div class="question-card">
+      <div class="question-num" id="question-num">Pregunta 1</div>
+      <div class="question-text" id="question-text"></div>
+      <ul class="options-list" id="options-list"></ul>
+      <div class="time-expired-note" id="time-expired-note">
+        <i class="ti ti-clock-x" style="font-size:13px;vertical-align:-1px;margin-right:4px;"></i>
+        Tiempo agotado. Pregunta marcada como omitida.
+      </div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+      Siguiente pregunta <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="screen-result" class="screen">
+  <div class="header-band">
+    <div class="logo-leaf">🌿</div>
+    <div><h1>Resultado del examen</h1><div class="subtitle" id="result-student-name"></div></div>
+  </div>
+  <div class="content-area">
+    <div class="result-header">
+      <div class="result-icon" id="result-icon">🎓</div>
+      <div class="result-title" id="result-title">—</div>
+      <div class="result-sub" id="result-sub">—</div>
+    </div>
+    <div class="score-ring-wrap">
+      <div class="score-ring">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#e0e0d8" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#4CAF50" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="263.9"
+            id="ring-fill" stroke-dashoffset="263.9"/>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-pct" id="ring-pct">0%</div>
+          <div class="ring-lbl">calificación</div>
+        </div>
+      </div>
+    </div>
+    <div class="result-stats" id="result-stats"></div>
+    <div class="section-breakdown" id="section-breakdown"></div>
+
+    <div class="action-row">
+      <button class="btn-export" onclick="exportXLSX()">
+        <i class="ti ti-table"></i> Descargar Excel (.xlsx)
+      </button>
+      <button class="btn-export csv" onclick="exportCSV()">
+        <i class="ti ti-file-text"></i> Descargar CSV
+      </button>
+    </div>
+    <p class="export-note">El archivo se descarga con nombre, nota y detalle de cada respuesta.</p>
+
+    <div class="review-section">
+      <div class="review-title"><i class="ti ti-list-check" style="font-size:13px;vertical-align:-2px;margin-right:5px;"></i>Revisión detallada de respuestas</div>
+      <div id="review-list"></div>
+    </div>
+    <button class="retry-btn" onclick="resetExam()">
+      <i class="ti ti-refresh"></i> Nuevo intento
+    </button>
+    <div style="height:2rem;"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { section:1, type:'multiple', text:'¿Cuál es una consecuencia fisiológica común de la hipoxia en plantas ornamentales causada por exceso de agua en el sustrato?', options:['Incremento en la respiración aeróbica de las raíces','Disminución de la absorción de nutrientes y marchitez foliar','Mayor producción de clorofila y crecimiento compacto','Incremento en la transpiración y rigidez del tallo'], correct:1 },
+  { section:1, type:'multiple', text:'La etiolación en plantas ornamentales ocurre principalmente cuando:', options:['Existe exceso de radiación solar y baja humedad','Las raíces reciben demasiado oxígeno en el sustrato','Hay deficiencia de luz, provocando tallos alargados y débiles','El sustrato presenta alta disponibilidad de nutrientes'], correct:2 },
+  { section:1, type:'multiple', text:'¿Cuál de las siguientes fitohormonas está principalmente asociada con la dominancia apical, elongación celular y formación de raíces adventicias?', options:['Citoquininas','Giberelinas','Ácido indolacético (AIA)','Ácido abscísico'], correct:2 },
+  { section:1, type:'multiple', text:'¿Qué grupo de fitohormonas participa principalmente en la división celular y retraso de la senescencia foliar en cultivos hortícolas?', options:['Auxinas','Citoquininas','Giberelinas','Etileno'], correct:1 },
+  { section:1, type:'multiple', text:'¿Cuál es una función fisiológica característica de las giberelinas en especies hortícolas?', options:['Inducción de abscisión foliar','Inhibición de la elongación del tallo','Promoción de la elongación celular y crecimiento del tallo','Cierre estomático bajo estrés hídrico'], correct:2 },
+  { section:1, type:'multiple', text:'¿Cuál es la principal importancia fisiológica de la relación Carbono–Nitrógeno (C/N) en las células vegetales?', options:['Regular exclusivamente la absorción de agua por las raíces','Controlar el equilibrio entre crecimiento vegetativo, síntesis de compuestos y acumulación de biomasa','Inhibir la actividad fotosintética en tejidos maduros','Determinar únicamente la respiración celular en frutos'], correct:1 },
+  { section:1, type:'multiple', text:'¿Cuál de los siguientes conceptos se refiere a la "estructura base" formada por átomos de carbono enlazados entre sí en las moléculas orgánicas?', options:['Grupos funcionales, que determinan las propiedades químicas específicas de las moléculas','Esqueletos de carbono, que constituyen la estructura principal de las moléculas orgánicas','Proteínas, formadas por la unión de aminoácidos mediante enlaces peptídicos','Enzimas, que aceleran las reacciones metabólicas en las células'], correct:1 },
+  { section:1, type:'multiple', text:'¿Cómo se llama la ruta metabólica que conecta el metabolismo primario con el metabolismo secundario en las plantas?', options:['Ciclo de Calvin','Ruta del ácido cítrico','Vía del shikimato','Glucólisis'], correct:2 },
+  { section:2, type:'tf', text:'La alta reflectancia de los acolchados plata provoca una mayor absorbancia de radiación térmica en el suelo en comparación con los acolchados negros.', correct:false },
+  { section:2, type:'tf', text:'Los acolchados blancos disminuyen la transmitancia de luz debido a que absorben la mayor parte de la radiación incidente.', correct:false },
+  { section:2, type:'tf', text:'En hortalizas cuyo órgano comestible corresponde al tallo, la acumulación de biomasa depende de la translocación continua de fotoasimilados provenientes de hojas fisiológicamente activas, las cuales actúan como órganos fuente.', correct:true },
+  { section:2, type:'tf', text:'En hortalizas de raíz, el órgano de reserva mantiene una función predominante como fuente de carbohidratos durante la fase de crecimiento vegetativo activo.', correct:false },
+  { section:2, type:'tf', text:'En hortalizas de fruto, la intensidad de la demanda metabólica del fruto determina su comportamiento como sumidero competitivo frente a otros órganos en crecimiento.', correct:true },
+  { section:2, type:'tf', text:'Las hortalizas bienales completan su ciclo biológico (germinación, crecimiento vegetativo, floración, producción de semillas y senescencia) en un solo ciclo de cultivo.', correct:false },
+  { section:2, type:'tf', text:'Las hormonas vegetales son compuestos orgánicos sintetizados en bajas concentraciones que regulan el crecimiento, desarrollo y respuestas fisiológicas de las plantas.', correct:true }
+];
+
+const LETTERS = ['A','B','C','D'];
+let currentQ=0, answers=[], timerInterval=null, timeLeft=60, studentName='', answered=false, resultData={};
+
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+
+function startExam() {
+  const ni = document.getElementById('student-name');
+  studentName = ni.value.trim();
+  if (!studentName) { ni.style.borderColor='#c62828'; ni.focus(); return; }
+  ni.style.borderColor='';
+  currentQ=0; answers=Array(QUESTIONS.length).fill(null);
+  document.getElementById('student-display').textContent = studentName;
+  showScreen('screen-exam'); renderQuestion();
+}
+
+function renderQuestion() {
+  answered=false; clearInterval(timerInterval); timeLeft=60;
+  const q=QUESTIONS[currentQ], total=QUESTIONS.length;
+  document.getElementById('progress-label').textContent=`Pregunta ${currentQ+1} de ${total}`;
+  document.getElementById('progress-bar').style.width=`${((currentQ+1)/total)*100}%`;
+  document.getElementById('question-num').textContent=`Pregunta ${currentQ+1}`;
+  document.getElementById('question-text').textContent=q.text;
+  const sTag=document.getElementById('section-tag');
+  sTag.textContent=q.section===1?'Opción múltiple · 70%':'Verdadero / Falso · 30%';
+  sTag.className='section-tag badge '+(q.section===1?'badge-green':'badge-amber');
+  const optList=document.getElementById('options-list');
+  optList.innerHTML='';
+  document.getElementById('time-expired-note').style.display='none';
+  if (q.type==='multiple') {
+    q.options.forEach((opt,i)=>{
+      const li=document.createElement('li');
+      const btn=document.createElement('button');
+      btn.className='option-btn';
+      btn.innerHTML=`<strong>${LETTERS[i]})</strong> ${opt}`;
+      btn.onclick=()=>selectOption(i,btn);
+      li.appendChild(btn); optList.appendChild(li);
+    });
+  } else {
+    const li=document.createElement('li');
+    li.innerHTML=`<div class="tf-row"><button class="tf-btn" id="btn-v" onclick="selectTF(true)"><i class="ti ti-check"></i> Verdadero</button><button class="tf-btn" id="btn-f" onclick="selectTF(false)"><i class="ti ti-x"></i> Falso</button></div>`;
+    optList.appendChild(li);
+  }
+  const nb=document.getElementById('next-btn');
+  const isLast=currentQ===total-1;
+  nb.className=isLast?'next-btn finish-btn':'next-btn';
+  nb.innerHTML=isLast?'<i class="ti ti-check"></i> Finalizar examen':'Siguiente pregunta <i class="ti ti-arrow-right"></i>';
+  updateTimer();
+  timerInterval=setInterval(()=>{ timeLeft--; updateTimer(); if(timeLeft<=0){clearInterval(timerInterval);expireQuestion();} },1000);
+}
+
+function updateTimer() {
+  document.getElementById('timer-num').textContent=timeLeft;
+  timeLeft<=15?document.getElementById('timer-box').classList.add('urgent'):document.getElementById('timer-box').classList.remove('urgent');
+}
+function expireQuestion() { answered=true; document.getElementById('time-expired-note').style.display='block'; document.querySelectorAll('.option-btn,.tf-btn').forEach(b=>b.disabled=true); }
+function selectOption(i,btn) { if(answered)return; answered=true; clearInterval(timerInterval); answers[currentQ]=i; document.querySelectorAll('.option-btn').forEach(b=>{b.classList.remove('selected');b.disabled=true;}); btn.classList.add('selected'); }
+function selectTF(val) { if(answered)return; answered=true; clearInterval(timerInterval); answers[currentQ]=val; const bv=document.getElementById('btn-v'),bf=document.getElementById('btn-f'); bv.disabled=true;bf.disabled=true; val?bv.classList.add('selected-v'):bf.classList.add('selected-f'); }
+function nextQuestion() { clearInterval(timerInterval); if(currentQ<QUESTIONS.length-1){currentQ++;renderQuestion();}else{showResults();} }
+
+function showResults() {
+  showScreen('screen-result');
+  document.getElementById('result-student-name').textContent=studentName;
+  const sec1Idx=QUESTIONS.map((q,i)=>q.section===1?i:-1).filter(i=>i>=0);
+  const sec2Idx=QUESTIONS.map((q,i)=>q.section===2?i:-1).filter(i=>i>=0);
+  let s1c=0,s2c=0;
+  sec1Idx.forEach(i=>{if(answers[i]!==null&&answers[i]===QUESTIONS[i].correct)s1c++;});
+  sec2Idx.forEach(i=>{if(answers[i]!==null&&answers[i]===QUESTIONS[i].correct)s2c++;});
+  const s1score=s1c/sec1Idx.length, s2score=s2c/sec2Idx.length;
+  const weighted=s1score*0.70+s2score*0.30;
+  const pct=Math.round(weighted*100);
+  const passed=weighted>=0.80;
+  const skipped=answers.filter(a=>a===null).length;
+  const s1pts=(s1score*0.70*100).toFixed(1);
+  const s2pts=(s2score*0.30*100).toFixed(1);
+  resultData={studentName,pct,passed,totalCorrect:s1c+s2c,skipped,s1c,s2c,s1pts,s2pts,s1score,s2score,weighted};
+  document.getElementById('result-icon').textContent=passed?'🎉':'📚';
+  document.getElementById('result-title').textContent=passed?'¡Examen aprobado!':'Examen no aprobado';
+  document.getElementById('result-sub').textContent=passed?`Obtuviste ${pct}% — superaste el mínimo de 80%`:`Obtuviste ${pct}% — necesitas al menos 80% para aprobar`;
+  const ring=document.getElementById('ring-fill');
+  ring.style.stroke=passed?'#4CAF50':'#e53935';
+  setTimeout(()=>{ring.style.transition='stroke-dashoffset 1s ease';ring.style.strokeDashoffset=263.9-(263.9*weighted);},100);
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('result-stats').innerHTML=`
+    <div class="rstat"><div class="rv">${s1c+s2c}/15</div><div class="rl">Correctas</div></div>
+    <div class="rstat"><div class="rv">${skipped}</div><div class="rl">Omitidas</div></div>
+    <div class="rstat"><div class="rv">${Math.round(s1score*100)}%</div><div class="rl">Secc. 1 (×70%)</div></div>
+    <div class="rstat"><div class="rv">${Math.round(s2score*100)}%</div><div class="rl">Secc. 2 (×30%)</div></div>`;
+  document.getElementById('section-breakdown').innerHTML=`
+    <div class="sbreak-header">Desglose por sección</div>
+    <div class="sbreak-row"><i class="ti ti-list-numbers sbreak-icon"></i><div class="sbreak-info"><div class="sbreak-name">Opción múltiple</div><div class="sbreak-detail">${s1c} / ${sec1Idx.length} correctas · ponderación 70%</div></div><div class="sbreak-score">${s1pts} pts</div></div>
+    <div class="sbreak-row"><i class="ti ti-toggle-right sbreak-icon"></i><div class="sbreak-info"><div class="sbreak-name">Verdadero / Falso</div><div class="sbreak-detail">${s2c} / ${sec2Idx.length} correctas · ponderación 30%</div></div><div class="sbreak-score">${s2pts} pts</div></div>`;
+  const reviewEl=document.getElementById('review-list');
+  reviewEl.innerHTML='';
+  QUESTIONS.forEach((q,i)=>{
+    const a=answers[i];
+    let isCorrect=false,userLabel='Omitida (tiempo)',correctLabel='';
+    if(q.type==='multiple'){isCorrect=a===q.correct;userLabel=a!==null?`${LETTERS[a]}) ${q.options[a]}`:'Omitida (tiempo)';correctLabel=`${LETTERS[q.correct]}) ${q.options[q.correct]}`;}
+    else{isCorrect=a===q.correct;userLabel=a===true?'Verdadero':a===false?'Falso':'Omitida (tiempo)';correctLabel=q.correct?'Verdadero':'Falso';}
+    const div=document.createElement('div');
+    div.className='review-item';
+    div.innerHTML=`<div class="rq"><span class="badge ${q.section===1?'badge-green':'badge-amber'}" style="font-size:10px;margin-right:6px;">${q.section===1?'OM':'VF'}</span>${i+1}. ${q.text}</div><div class="ra-row">${a===null?'<span class="ans-chip ans-skipped">⏱ Omitida</span>':isCorrect?`<span class="ans-chip ans-correct">✓ ${userLabel}</span>`:`<span class="ans-chip ans-wrong">✗ Tu respuesta: ${userLabel}</span><span class="ans-chip ans-correct">✓ Correcta: ${correctLabel}</span>`}</div>`;
+    reviewEl.appendChild(div);
+  });
+}
+
+function buildRows() {
+  const now=new Date(), fecha=now.toLocaleDateString('es-CL'), hora=now.toLocaleTimeString('es-CL');
+  const rows=[];
+  QUESTIONS.forEach((q,i)=>{
+    const a=answers[i];
+    let userResp='Omitida',correctResp='',estado='Omitida';
+    if(q.type==='multiple'){correctResp=`${LETTERS[q.correct]}) ${q.options[q.correct]}`;if(a!==null){userResp=`${LETTERS[a]}) ${q.options[a]}`;estado=a===q.correct?'Correcta':'Incorrecta';}}
+    else{correctResp=q.correct?'Verdadero':'Falso';if(a!==null){userResp=a?'Verdadero':'Falso';estado=a===q.correct?'Correcta':'Incorrecta';}}
+    rows.push({'Alumno':resultData.studentName,'Fecha':fecha,'Hora':hora,'N° Pregunta':i+1,'Sección':q.section===1?'Opción múltiple':'Verdadero / Falso','Ponderación sección':q.section===1?'70%':'30%','Pregunta':q.text,'Respuesta del alumno':userResp,'Respuesta correcta':correctResp,'Estado':estado});
+  });
+  rows.push({});
+  [['Correctas secc. 1',`${resultData.s1c} / 8`],['Correctas secc. 2',`${resultData.s2c} / 7`],['Puntos secc. 1 (70%)',resultData.s1pts+' pts'],['Puntos secc. 2 (30%)',resultData.s2pts+' pts'],['Calificación final',resultData.pct+'%'],['Resultado',resultData.passed?'APROBADO':'REPROBADO'],['Omitidas por tiempo',resultData.skipped]].forEach(([k,v])=>{rows.push({'Pregunta':k,'Respuesta del alumno':v});});
+  return rows;
+}
+
+function exportXLSX() {
+  const rows=buildRows();
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[18,10,8,12,20,20,60,35,35,12].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Resultados');
+  XLSX.writeFile(wb,`Examen_${resultData.studentName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportCSV() {
+  const rows=buildRows();
+  const headers=Object.keys(rows[0]);
+  const escape=v=>{const s=String(v??'');return s.includes(',')||s.includes('"')||s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s;};
+  const lines=[headers.map(escape).join(','),...rows.map(r=>headers.map(h=>escape(r[h]??'')).join(','))];
+  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Examen_${resultData.studentName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+function resetExam() {
+  document.getElementById('student-name').value='';
+  answers=[];currentQ=0;clearInterval(timerInterval);resultData={};
+  showScreen('screen-start');
+}
+</script>
+</body>
+</html>
